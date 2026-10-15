@@ -160,4 +160,4 @@ deploys the site.
 - Free data can be late or wrong. A bad print can create or suppress a signal.
 - NSE industry labels exist only for the ~750 Nifty Total Market names; the rest show as Unclassified.
 - The original repo's XGBoost model is not part of this system. Its trained model and data were
-  never in the repository, so it could not be reproduced.
+  never in the repository, so it could not be reproduced..
