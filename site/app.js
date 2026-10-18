@@ -117,7 +117,8 @@
     const bt = sum.backtest.trades.all;
     mount(
       staleWarning(sum),
-      h("div", { class: "head" }, h("h1", {}, sum.market.name), h("span", { class: "muted" }, `after the close of ${sum.asof} · ${c.rated.toLocaleString()} stocks rated of ${c.tracked.toLocaleString()} tracked`)),
+      h("div", { class: "head" }, h("h1", {}, sum.market.name), h("span", { class: "muted" }, `after the close of ${sum.asof} · ${c.rated.toLocaleString()} stocks rated of ${c.tracked.toLocaleString()} tracked`),
+        h("span", { class: "muted small", title: "New data is published automatically after each market closes, Monday to Friday. This page picks it up on its own." }, `· updated ${ago(sum.generated)}, refreshes automatically`)),
       h("div", { class: "grid" },
         h("div", { class: "card banner " + reg.state },
           h("h2", {}, "Market: " + reg.state[0].toUpperCase() + reg.state.slice(1)),
@@ -423,7 +424,38 @@
 
   // ---------- routing
   const VIEWS = { overview, screener: screenerView, stock, list: myList, record, method };
-  async function route() {
+  // Keep an open tab current: check for a newer publish every few minutes (and whenever the
+  // tab comes back into view) and redraw in place when there is one.
+  const CHECK_EVERY = 5 * 60 * 1000;
+  let lastCheck = 0;
+  function ago(iso) {
+    const min = Math.round((Date.now() - new Date(iso)) / 60000);
+    return min < 60 ? `${Math.max(min, 1)} min ago` : min < 2880 ? `${Math.round(min / 60)} h ago` : `${Math.round(min / 1440)} days ago`;
+  }
+  async function checkForUpdate() {
+    if (document.hidden || Date.now() - lastCheck < 60 * 1000) return;
+    lastCheck = Date.now();
+    const market = store.get("st.market", "us");
+    const key = market + "/summary";
+    if (!cache[key]) return;
+    try {
+      const [old, fresh] = await Promise.all([cache[key], fetch(`data/${key}.json`, { cache: "no-store" }).then((r) => r.json())]);
+      if (fresh.generated === old.generated) return;
+      for (const k of Object.keys(cache)) if (k.startsWith(market + "/")) delete cache[k];
+      cache[key] = Promise.resolve(fresh);
+      await route({ keepScroll: true });
+      toast(`Updated with ${MARKETS[market]} data from ${fresh.asof}`);
+    } catch (e) { /* offline or mid-deploy: try again next time */ }
+  }
+  function toast(text) {
+    const t = h("div", { class: "toast", role: "status" }, text);
+    document.body.append(t);
+    setTimeout(() => t.remove(), 6000);
+  }
+  setInterval(checkForUpdate, CHECK_EVERY);
+  document.addEventListener("visibilitychange", checkForUpdate);
+
+  async function route(opts) {
     const [path, qs] = location.hash.replace(/^#\/?/, "").split("?");
     const parts = path.split("/").filter(Boolean).map(decodeURIComponent);
     let market = MARKETS[parts[0]] ? parts.shift() : store.get("st.market", "us");
@@ -437,7 +469,7 @@
       mount(h("div", { class: "card" }, h("h2", {}, `No ${MARKETS[market]} data to show`),
         h("p", { class: "muted" }, `The ${MARKETS[market]} files could not be loaded (${e.message}). The daily job may not have published this market yet.`)));
     }
-    window.scrollTo(0, 0);
+    if (!(opts && opts.keepScroll)) window.scrollTo(0, 0);
   }
   document.querySelectorAll("#market-switch button").forEach((b) => b.addEventListener("click", () => {
     const parts = location.hash.replace(/^#\/?/, "").split("?")[0].split("/").filter(Boolean);
@@ -468,7 +500,7 @@
   });
   document.getElementById("jump").addEventListener("submit", (e) => { e.preventDefault(); const first = results.querySelector("a"); if (first) first.click(); });
   document.addEventListener("click", (e) => { if (!e.target.closest("#jump")) results.hidden = true; });
-  window.addEventListener("hashchange", route);
-  window.addEventListener("resize", () => { clearTimeout(route.t); route.t = setTimeout(() => document.querySelector("canvas") && route(), 250); });
+  window.addEventListener("hashchange", () => route());
+  window.addEventListener("resize", () => { clearTimeout(route.t); route.t = setTimeout(() => document.querySelector("canvas") && route({ keepScroll: true }), 250); });
   route();
 })();

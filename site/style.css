@@ -90,3 +90,4 @@ canvas { display: block; width: 100%; }
 .head .px { font-size: 22px; font-weight: 700; }
 .foot { max-width: 1180px; margin: 0 auto; padding: 16px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
 @media (max-width: 640px) { #jump { margin-left: 0; width: 100%; } #jump input { width: 100%; } #jump-results { left: 0; width: 100%; } td.name { max-width: 120px; } }
+.toast { position: fixed; right: 16px; bottom: 16px; z-index: 10; background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 8px; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
