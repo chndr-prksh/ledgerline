@@ -1276,3 +1276,5 @@ date,symbol,event,detail,price,stop,rs,logged_at
 2026-10-26,VIV,SELL,trend breakdown,11.36,,20,2026-10-27T01:34Z
 2026-10-26,VSH,SELL,trend breakdown,26.71,,69,2026-10-27T01:34Z
 2026-10-26,WMB,SELL,trend breakdown,71.75,,62,2026-10-27T01:34Z
+2026-10-05,IGR,SELL,trend breakdown,11.51,,65,2026-10-27T18:52Z
+2026-10-16,ALL,BUY,pullback,247.88,231.9,70,2026-10-27T18:52Z
