@@ -2248,3 +2248,5 @@ date,symbol,event,detail,price,stop,rs,logged_at
 2026-11-12,SKM,SELL,trend breakdown,34.12,,62,2026-11-12T21:01Z
 2026-11-12,SW,SELL,trend breakdown,43.18,,41,2026-11-12T21:01Z
 2026-11-12,YETI,SELL,trend breakdown,38.33,,26,2026-11-12T21:01Z
+2026-11-12,ITGR,EXIT,trend,126.42,,89,2026-11-13T02:45Z
+2026-11-12,CSR,SELL,trend breakdown,56.24,,31,2026-11-13T02:45Z
