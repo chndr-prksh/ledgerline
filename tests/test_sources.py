@@ -97,3 +97,25 @@ def test_yahoo_history_gives_up_quickly_when_throttled(monkeypatch):
     monkeypatch.setattr(yahoo, "history_one", refused)
     bars, missing = yahoo.history([f"S{i}" for i in range(500)], "us", workers=4)
     assert len(missing) == 500 and bars.empty and len(calls) < 60
+
+
+def _chart(last_ts, regular_start, regular_end):
+    ts = [last_ts - 3 * 86400, last_ts - 86400, last_ts]
+    return {"timestamp": ts, "meta": {"exchangeTimezoneName": "America/New_York",
+            "currentTradingPeriod": {"regular": {"start": regular_start, "end": regular_end}}},
+            "indicators": {"quote": [{"open": [1, 2, 3], "high": [1, 2, 3], "low": [1, 2, 3], "close": [1, 2, 3], "volume": [1, 1, 1]}]}}
+
+
+def test_yahoo_keeps_a_closed_session_after_yahoo_rolls_to_the_next_one():
+    from tracker.sources import yahoo
+    fri_close = 1792180801                                 # Fri 16 Oct 2026 20:00:01 UTC, stamped at the close
+    mon_open, mon_close = fri_close + 3 * 86400 - 23400, fri_close + 3 * 86400
+    df = yahoo._parse(_chart(fri_close, mon_open, mon_close), now=fri_close + 4 * 3600)
+    assert df["date"].iloc[-1] == pd.Timestamp("2026-10-16")
+
+
+def test_yahoo_drops_the_bar_of_a_session_still_trading():
+    from tracker.sources import yahoo
+    open_ts = 1792157400                                   # Fri 16 Oct 2026 13:30 UTC
+    df = yahoo._parse(_chart(open_ts + 3600, open_ts, open_ts + 23400), now=open_ts + 7200)
+    assert df["date"].iloc[-1] == pd.Timestamp("2026-10-15")

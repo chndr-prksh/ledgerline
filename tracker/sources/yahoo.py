@@ -33,12 +33,17 @@ def _parse(result, now=None):
         "date": pd.to_datetime(ts, unit="s", utc=True).tz_convert(meta["exchangeTimezoneName"]).tz_localize(None).normalize(),
         "open": q["open"], "high": q["high"], "low": q["low"], "close": q["close"], "volume": q["volume"],
     }).dropna(subset=["open", "high", "low", "close"])
-    # A bar for a session that has not closed yet is partial; signals are end-of-day only.
-    end = (meta.get("currentTradingPeriod") or {}).get("regular", {}).get("end")
-    now = now or time.time()
-    if end and len(df) and now < end and ts[-1] >= end - 86400:
-        df = df.iloc[:-1]
     df = df.drop_duplicates("date", keep="last")
+    # A bar for a session that has not closed yet is partial; signals are end-of-day only.
+    # After the close Yahoo may already describe the *next* session here, so compare dates:
+    # only the bar of the session that is still open gets dropped.
+    regular = (meta.get("currentTradingPeriod") or {}).get("regular") or {}
+    start, end = regular.get("start"), regular.get("end")
+    now = now or time.time()
+    if start and end and len(df) and start <= now < end:
+        session = pd.Timestamp(start, unit="s", tz="UTC").tz_convert(meta["exchangeTimezoneName"]).tz_localize(None).normalize()
+        if df["date"].iloc[-1] == session:
+            df = df.iloc[:-1]
     return df if len(df) else None
 
 
