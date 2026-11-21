@@ -2739,3 +2739,4 @@ date,symbol,event,detail,price,stop,rs,logged_at
 2026-11-20,UHAL,SELL,trend breakdown,52.53,,41,2026-11-20T21:27Z
 2026-11-20,UI,SELL,trend breakdown,590.66,,57,2026-11-20T21:27Z
 2026-11-20,WSC,SELL,trend breakdown,16.14,,18,2026-11-20T21:27Z
+2026-11-20,APOG,EXIT,stop,43.12,,79,2026-11-21T03:21Z
